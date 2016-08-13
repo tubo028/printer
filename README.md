@@ -1,6 +1,9 @@
 # Printer
 
-## 便利リンク
+ICPC系の競技プログラミングオンサイト会場で使うプリントフォームです
 
-- http://qiita.com/kimioka0/items/751e460cbb59c70379c6
-- http://www.sinatrarb.com/intro-ja.html
+```
+bundle install
+sqlite3 data.db < import.sql
+bundle exec ruby app.rb
+```

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <script src="<%= settings.url_root %>/jquery.min.js"></script>
+        <%= erb :bootstrap %>
+        <title>印刷フォーム</title> <!-- TODO: titleだけ引数に渡してheadをerbにまとめる -->
+    </head>
+    <body>
+        <div class="container">
+            <h1>印刷フォーム</h1>
+            <%= erb :message, locals: {
+                message: @message,
+                error: @error
+            }
+            %>
+
+            <form method="post" action="<%= settings.url_root %>/submit">
+                <div class="form-group">
+                    <label class="control-label">チーム名</label>
+                    <input type="text" name="team_name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">言語</label>
+                    <input type="text" name="language" class="form-control" id="langform"
+                           placeholder="入力 or ボタン押す">
+                    <a class="langbtn btn btn-default">C</a>
+                    <a class="langbtn btn btn-default">C++</a>
+                    <a class="langbtn btn btn-default">C#</a>
+                    <a class="langbtn btn btn-default">Java</a>
+                    <a class="langbtn btn btn-default">Python</a>
+                    <a class="langbtn btn btn-default">Ruby</a>
+                    <a class="langbtn btn btn-default">Perl</a>
+                    <a class="langbtn btn btn-default">Text</a>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">ソースコード</label>
+                    <textarea name="source" class="form-control" rows="10"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="control-label">コメント</label>
+                    <textarea name="comment" class="form-control" rows="3"
+                              placeholder="例: 2部頼む"></textarea>
+                </div>
+                <span class="help-block">！！ここに送信してもジャッジは受けられません！！</span>
+                <button type="submit" class="btn btn-primary">送信</button>
+            </form>
+        </div>
+        <script>
+         $(function(){
+             $(".langbtn").click(function(e){
+                 $("#langform").val($(this).text());
+             });
+         });
+        </script>
+    </body>
+</html>

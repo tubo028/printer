@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <script src="<%= settings.url_root %>/jquery.min.js"></script>
+        <link rel="stylesheet" href="<%= settings.url_root %>/code.css">
+        <title>クエリ #<%= @q.id %></title>
+    </head>
+    <body>
+        <style type="text/css" media="print">
+         <!--
+         .ignoreprint { display:none }
+         -->
+        </style>
+        <style type="text/css">
+         <!--
+         .ignoreprint > table > tbody > tr > td:nth-child(1) { padding-right: 30px }
+         -->
+        </style>
+        <div class="ignoreprint">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>提出ID</td>
+                        <td><%= @q.id %></td>
+                    </tr>
+                    <tr>
+                        <td>チーム</td>
+                        <td><%= h @q.team_name %></td>
+                    </tr>
+                    <tr>
+                        <td>提出時刻</td>
+                        <td><%= @q.created_at.getlocal %></td>
+                    </tr>
+                    <tr>
+                        <td>言語</td>
+                        <td><%= h @q.language %></td>
+                    </tr>
+                    <tr>
+                        <td>状態</td>
+                        <td>
+                            <%= @q.printed_at ? "印刷済み" : "印刷待ち" %>
+                            <a id="toggle" href="javascript:void(0);">
+                                <%= @q.printed_at ? "印刷待ちにする" : "印刷済みにする" %>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>コメント</td>
+                        <td><%= h(@q.comment).gsub("\n", '<br>') %></td>
+                    </tr>
+                    <tr>
+                        <td>Source</td>
+                        <td><a id="copybtn" href="javascript:void(0);">コピー</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <%= @source %>
+        <script>
+         var clicked = false;
+         $("#toggle").click(function(e){
+             if(clicked) return;
+             clicked = true;
+             $.ajax({
+                 type: "POST",
+                 data: { id: "<%= @q.id %>" },
+                 url: "<%= settings.url_root + (@q.printed_at ? '/undone' : '/done') %>"
+             }).done(function(){
+                 location.reload(true);
+             });
+         });
+         $("#copybtn").click(function(){
+             window.getSelection().removeAllRanges();
+             try {
+                 var rng = document.createRange();
+                 rng.selectNode($(".highlight > pre:nth-child(1)").get()[0]);
+                 window.getSelection().addRange(rng);
+                 document.execCommand("copy");
+             } catch(err){ console.log(err) }
+             window.getSelection().removeAllRanges();
+         })
+        </script>
+    </body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <script src="<%= settings.url_root %>/jquery.min.js"></script>
+        <%= erb :bootstrap %>
+        <title>クエリ一覧</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>クエリ一覧</h1>
+            <%= erb :message %>
+            <div class="checkbox">
+                <label for="ch">
+                    <input type="checkbox" id="ch" checked="checked">
+                    5秒ごとに自動更新
+                </label>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>状態</th>
+                        <th>提出日時</th>
+                        <th>チーム</th>
+                        <th>コメント</th>
+                        <th>言語</th>
+                        <th>バイト数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% @qs.each { |q| %>
+                    <tr class="<%= q.printed_at ? 'success' : 'danger' %>">
+                        <td><a href="<%= settings.url_root %>/query/<%= q.id %>">#<%= q.id %></a></td>
+                        <td><%= q.printed_at ? "済" : "未" %></td>
+                        <td><%= q.created_at.localtime.strftime("%Y/%m/%d %X") %></td>
+                        <td><%= h q.team_name %></td>
+                        <td><%= h (q.comment && q.comment.size > 10 ?
+                                   q.comment[0...10] + '...' :
+                                   q.comment) %></td>
+                        <td><%= q.language %></td>
+                        <td><%= q.source.bytesize %></td>
+                    </tr>
+                    <% } %> 
+                </tbody>
+            </table>
+        </div>
+        <script>
+         $(function(){
+             window.setInterval(function(){
+                 if($("#ch").prop('checked')){
+                     location.reload(true);
+                 }
+             }, 5000);
+         });
+        </script>
+    </body>
+</html>

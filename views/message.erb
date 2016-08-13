@@ -1,0 +1,15 @@
+<%
+message ||= {}
+error ||= {}
+%>
+
+<% if error.size != 0 %>
+    <div class="alert alert-danger">
+        <% error.each { |k,v| %><p><%= v %></p><% } %>
+    </div>
+<% end %>
+<% if message.size != 0 %>
+    <div class="alert alert-info">
+        <% message.each { |k,v| %><p><%= v %></p><% } %>
+    </div>
+<% end %>
