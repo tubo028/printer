@@ -8,7 +8,6 @@ require 'tempfile'
 ADMIN_USERNAME = ENV['id'] || ''
 ADMIN_PASSWORD = ENV['pw'] || ''
 SESSIN_SECRET = ENV['ss'] || 'secret'
-set :environment, :production
 set :root, File.dirname(__FILE__)
 set :url_root, '/printer'
 set :session_secret, SESSIN_SECRET
@@ -21,12 +20,13 @@ helpers do
 
     def basic_auth!
       unless authorized?
-        return
         response['WWW-Authenticate'] = %(Basic realm="どちらも空白")
-        throw(:halt, [401, "401"])
+        halt(401, "401")
       end
     end
     def authorized?
+      return true
+
       @auth ||= Rack::Auth::Basic::Request.new(request.env)
       username = ADMIN_USERNAME
       password = ADMIN_PASSWORD
@@ -63,17 +63,19 @@ get "/query/:id" do
   basic_auth!
   match = params[:id].match(/^(\d+)$/)
   id = match ? match[0] : nil
-  unless id
-    redirect '/query'
-  end
+  redirect '/query' unless id
 
-  @q = PrintQuery.find(id)
+  begin
+    @q = PrintQuery.find(id)
+  rescue
+    halt(404, "404")
+  end
   f = Tempfile.create('pygin')
   f.write(@q.source)
   f.close
 
-  lang = 'text' if lang.nil?
-  lang = @q.language.to_s.strip.downcase.
+  lang = @q.language || 'text'
+  lang = lang.to_s.strip.downcase.
          gsub('#', 'sharp').gsub('+', 'p')
   lang = 'text' if !(lang =~ /^[a-zA-Z\+#]{1,20}/)
   lang = 'c++' if lang == 'cc'
@@ -99,34 +101,36 @@ post "/submit" do
     session[:error][:comment] = "コメントは100000文字以下でお願いします"
   end
 
-  if session[:error].size != 0
-    redirect '/'
-  else
-    PrintQuery.create({:team_name => params[:team_name],
-                       :language  => params[:language],
-                       :source    => params[:source],
-                       :comment   => params[:comment]
-                      })
-    session[:message] = {}
-    session[:message][0] = "送信しました" +
-                           " (Language: #{params[:language]}," +
-                           " Code Length: #{params[:source].bytesize} bytes," +
-                           " Time: #{Time.now.localtime.strftime("%Y/%m/%d %X")})"
-    redirect '/'
-  end
+  redirect '/' if session[:error].size > 0
+
+  PrintQuery.create({:team_name => params[:team_name],
+                     :language  => params[:language],
+                     :source    => params[:source],
+                     :comment   => params[:comment]
+                    })
+  session[:message] = {}
+  session[:message][:send] = "送信しました (" +
+                             "Language: #{params[:language]}, " +
+                             "Length: #{params[:source].bytesize} bytes, " +
+                             "Time: #{Time.now.localtime.strftime("%Y/%m/%d %X")})"
+  redirect '/'
 end
 
 post %r{/(done|undone)} do |d|
-  match = params[:id].match(/^(\d+)$/)
-  id = match ? match[0] : nil
-  unless id
-    { :id => params[:id], :status => "faild" }.to_json
-  else
-    @q = PrintQuery.find(id)
-    @q.printed_at = d == 'done' ? Time.now : nil
+  faild = { :id => params[:id], :status => "faild" }.to_json
+
+  id = params[:id]
+  return faild unless id
+  return faild unless id =~ /^\d+$/
+  @q = PrintQuery.find_by_id(id.to_i)
+  return faild unless @q
+  @q.printed_at = d == 'done' ? Time.now : nil
+  begin
     @q.save
-    { :id => params[:id], :status => "succeeded" }.to_json
+  rescue
+    return faild
   end
+  { :id => params[:id], :status => "succeeded" }.to_json
 end
 
 after do
