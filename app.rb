@@ -59,7 +59,7 @@ get "/query/?" do
   erb :list
 end
 
-get "/query/:id" do
+get "/query/:id/?" do
   basic_auth!
   match = params[:id].match(/^(\d+)$/)
   id = match ? match[0] : nil
